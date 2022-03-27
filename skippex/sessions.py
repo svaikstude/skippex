@@ -154,6 +154,7 @@ class SessionDispatcher:
             logger.info(
                 f"Session {session.key} ended: {session.player} stopped playing {session.playable}"
             )
+        self._listener.on_session_removal(session)
         del self._last_active[session]
 
     def dispatch_removal(self, removed_key: SessionKey) -> bool:

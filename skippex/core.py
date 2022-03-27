@@ -1,6 +1,6 @@
 from dataclasses import replace
 import logging
-from typing import Tuple, cast
+from typing import Set, Tuple, cast
 
 from .seekables import SeekableNotFoundError, SeekableProvider
 from .sessions import (
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class AutoSkipper(SessionListener, SessionExtrapolator):
     def __init__(self, seekable_provider: SeekableProvider):
         self._sp = seekable_provider
+        self._skipped: Set[Session] = set()
 
     def trigger_extrapolation(self, session: Session, listener_accepted: bool) -> bool:
         # Note it's only useful to do this when the state is 'playing':
@@ -69,6 +70,8 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         logger.debug(f"ending_marker={ending_marker}")
 
         if intro_marker.start <= view_offset_ms < intro_marker.end:
+            if session in self._skipped:
+                return
             try:
                 seekable = self._sp.provide_seekable(session)
             except SeekableNotFoundError as e:
@@ -81,6 +84,7 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
                 return
 
             seekable.seek(intro_marker.end)
+            self._skipped.add(session)
             logger.info(
                 f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
             )
@@ -102,3 +106,6 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
             logger.debug(f"Session {session.key}: did not skip")
 
         logger.debug("-----")
+
+    def on_session_removal(self, session: Session):
+        self._skipped.discard(session)
