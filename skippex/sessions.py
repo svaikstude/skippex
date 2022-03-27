@@ -75,7 +75,7 @@ class EpisodeSession(Session):
         return IntroMarker(start=internal.start, end=internal.end)
 
     def ending_marker(self) -> int:
-        return self.playable.duration - 2000
+        return self.playable.duration - 5000
 
 
 class SessionFactory:
