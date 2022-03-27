@@ -1,6 +1,5 @@
 from unittest.mock import Mock
 
-from plexapi.base import Playable
 from plexapi.client import PlexClient
 from plexapi.video import Episode
 import pytest
@@ -13,8 +12,8 @@ from skippex.sessions import EpisodeSession
 
 def make_episode_session(
     *,
-    key: str = 'dummy',
-    state: Literal['buffering', 'playing', 'paused', 'stopped'] = 'buffering',
+    key: str = "dummy",
+    state: Literal["buffering", "playing", "paused", "stopped"] = "buffering",
     playable: Episode,
     player: PlexClient,
     view_offset_ms: int = -1,
@@ -36,7 +35,7 @@ class TestAutoSkipper:
 
     def test_trigger_extrapolation__returns_false_if_past_intro(self, auto_skipper: AutoSkipper):
         intro_marker = Mock()
-        intro_marker.type = 'intro'
+        intro_marker.type = "intro"
         intro_marker.start = 0
         intro_marker.end = 1000
 

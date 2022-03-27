@@ -18,7 +18,7 @@ classifiers = [
 skippex = 'skippex.cmd:main'
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = ">=3.6.2,<4.0"
 PlexAPI = "^4.2.0"
 requests = "^2.25.1"
 websocket_client = "^0.57.0"
@@ -36,6 +36,9 @@ pytest = "^6.2.1"
 tox = "^3.21.1"
 tox-poetry-dev-dependencies = "^0.0.9"
 subprocess-tee = "^0.2.0"
+mypy = "^0.942"
+flake8 = "^4.0.1"
+black = "^22.1.0"
 
 [tool.pytest.ini_options]
 filterwarnings = [
@@ -46,3 +49,7 @@ filterwarnings = [
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 99
+target-version = ["py37", "py38"]

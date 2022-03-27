@@ -23,12 +23,12 @@ SessionKey = str
 @dataclass(frozen=True, eq=False)
 class Session:
     key: str
-    state: Literal['buffering', 'playing', 'paused', 'stopped']
+    state: Literal["buffering", "playing", "paused", "stopped"]
     playable: Playable
     player: PlexClient
 
     @classmethod
-    def from_playable(cls, playable: Playable) -> 'Session':
+    def from_playable(cls, playable: Playable) -> "Session":
         player = playable.players[0]
         return cls(
             key=str(playable.sessionKey),
@@ -56,7 +56,7 @@ class EpisodeSession(Session):
     view_offset_ms: int
 
     @classmethod
-    def from_playable(cls, episode: Episode) -> 'EpisodeSession':
+    def from_playable(cls, episode: Episode) -> "EpisodeSession":
         assert not episode.isFullObject()  # Probably dangerous wrt viewOffset otherwise.
         player = episode.players[0]
 
@@ -71,7 +71,7 @@ class EpisodeSession(Session):
     def intro_marker(self) -> Optional[IntroMarker]:
         if not self.playable.hasIntroMarker:
             return None
-        internal = next(m for m in self.playable.markers if m.type == 'intro')
+        internal = next(m for m in self.playable.markers if m.type == "intro")
         return IntroMarker(start=internal.start, end=internal.end)
 
 
@@ -130,8 +130,8 @@ class SessionDispatcher:
         """
         if isinstance(session, EpisodeSession) and session not in self._last_active:
             logger.info(
-                f'New session {session.key}: {session.player} is playing {session.playable} '
-                f'(intro marker = {session.playable.hasIntroMarker})'
+                f"New session {session.key}: {session.player} is playing {session.playable} "
+                f"(intro marker = {session.playable.hasIntroMarker})"
             )
 
         accepted = False
@@ -153,7 +153,9 @@ class SessionDispatcher:
 
     def _dispatch_removal(self, session: Session):
         if isinstance(session, EpisodeSession):
-            logger.info(f'Session {session.key} ended: {session.player} stopped playing {session.playable}')
+            logger.info(
+                f"Session {session.key} ended: {session.player} stopped playing {session.playable}"
+            )
         self._listener.on_session_removal(session)
         del self._last_active[session]
 
@@ -167,6 +169,7 @@ class SessionDispatcher:
 
 class SessionNotFoundError(Exception):
     """Raised by SessionProvider when it could not find a session."""
+
     pass
 
 
@@ -181,7 +184,7 @@ class SessionProvider:
         for playable in sessions:
             if str(playable.sessionKey) == session_key:
                 return SessionFactory.make(playable)
-        raise SessionNotFoundError(f'could not find session key {session_key} among {sessions}')
+        raise SessionNotFoundError(f"could not find session key {session_key} among {sessions}")
 
 
 class SessionDiscovery:
@@ -204,10 +207,10 @@ class SessionDiscovery:
 
     @synchronized
     def alert_callback(self, alert: NotificationContainerDict):
-        if alert['type'] == 'playing':
+        if alert["type"] == "playing":
             # Never seen a case where the alert doesn't contain exactly one
             # notification, but let's loop over the list out of caution.
-            for notification in alert['PlaySessionStateNotification']:  # type: ignore
+            for notification in alert["PlaySessionStateNotification"]:  # type: ignore
                 self._handle_notification(notification)
 
     @synchronized
@@ -222,7 +225,7 @@ class SessionDiscovery:
         self._timers.pop(session.key, None)
 
         if not self._extrapolator.trigger_extrapolation(session, accepted):
-            logger.debug(f'Will not extrapolate session {session}')
+            logger.debug(f"Will not extrapolate session {session}")
             return
 
         assert session.key not in self._timers
@@ -238,8 +241,8 @@ class SessionDiscovery:
         self._timers[new_session.key] = new_timer
 
         logger.debug(
-            f'Timer (delay={delay_sec:.3f}s) started for extrapolated session '
-            f'{new_session} (original: {session})'
+            f"Timer (delay={delay_sec:.3f}s) started for extrapolated session "
+            f"{new_session} (original: {session})"
         )
 
     @synchronized
@@ -250,9 +253,9 @@ class SessionDiscovery:
         # repeats.
 
         # Ensure this is a string because I don't trust the Plex API.
-        session_key = str(notification['sessionKey'])
+        session_key = str(notification["sessionKey"])
         logger.debug(
-            f'Incoming notification for session key {session_key} '
+            f"Incoming notification for session key {session_key} "
             f'(state = {notification["state"]})'
         )
 
@@ -262,11 +265,11 @@ class SessionDiscovery:
         old_timer = self._timers.pop(session_key, None)
         if old_timer:
             old_timer.cancel()
-            logger.debug(f'Cancelled timer for session key {session_key}')
+            logger.debug(f"Cancelled timer for session key {session_key}")
         else:
-            logger.debug(f'No existing timer for session key {session_key}')
+            logger.debug(f"No existing timer for session key {session_key}")
 
-        if notification['state'] == 'stopped':
+        if notification["state"] == "stopped":
             # The HTTP API won't contain the session anymore, so just dispatch
             # the removal and return.
             self._dispatcher.dispatch_removal(session_key)
@@ -275,7 +278,7 @@ class SessionDiscovery:
         try:
             session = self._provider.provide(session_key)
         except SessionNotFoundError:
-            if notification['state'] == 'paused':
+            if notification["state"] == "paused":
                 # Plex is a little weird and sometimes sends a session
                 # on the WebSocket even though the HTTP API doesn't
                 # return it. I've seen this happen after opening the
@@ -286,16 +289,16 @@ class SessionDiscovery:
                 # state. Anyway this is an icky situation and we'll get
                 # notified if playback starts anyway, so just return
                 # here.
-                logger.debug(f"No session found for 'paused' notification")
+                logger.debug("No session found for 'paused' notification")
                 return
-            elif notification['state'] == 'buffering':
+            elif notification["state"] == "buffering":
                 # Encountered this issue with an iPhone client that would buffer
                 # a lot at the beginning of the session. To be investigated
                 # further, but it might be that the HTTP API doesn't return a
                 # session, until the first 'playing' notification. Not a huge
                 # deal anyway as long as we get our 'playing' notification, so
                 # let's just warn here.
-                logger.warning(f"No session found for 'buffering' notification")
+                logger.warning("No session found for 'buffering' notification")
                 return
             raise
 

@@ -19,12 +19,10 @@ def db() -> Database:
 
 @pytest.fixture
 def app() -> PlexApplication:
-    return PlexApplication(name='dummy', identifier='dummy_id')
+    return PlexApplication(name="dummy", identifier="dummy_id")
 
 
 def test_cmd_run__empty_db_returns_exit_unauthorized(
-    args: argparse.Namespace,
-    db: Database,
-    app: PlexApplication
+    args: argparse.Namespace, db: Database, app: PlexApplication
 ):
     assert cmd_run(args, db, app) == EXIT_UNAUTHORIZED

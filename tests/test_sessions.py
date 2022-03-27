@@ -20,14 +20,14 @@ from skippex.sessions import (
 
 
 def make_fake_notification(
-    sessionKey: str = 'dummy',
-    guid: str = 'dummy',
-    ratingKey: str = 'dummy',
-    url: str = 'dummy',
-    key: str = 'dummy',
+    sessionKey: str = "dummy",
+    guid: str = "dummy",
+    ratingKey: str = "dummy",
+    url: str = "dummy",
+    key: str = "dummy",
     viewOffset: int = -1,
     playQueueItemID: int = -1,
-    state: Literal['buffering', 'playing', 'paused', 'stopped'] = 'buffering',
+    state: Literal["buffering", "playing", "paused", "stopped"] = "buffering",
 ) -> PlaybackNotification:
     return PlaybackNotification(
         sessionKey=sessionKey,
@@ -42,8 +42,8 @@ def make_fake_notification(
 
 
 def make_fake_session(
-    key: str = 'dummy',
-    state: Literal['buffering', 'playing', 'paused', 'stopped'] = 'buffering',
+    key: str = "dummy",
+    state: Literal["buffering", "playing", "paused", "stopped"] = "buffering",
     playable: Playable = Mock(spec=Playable),
     player: PlexClient = Mock(spec=PlexClient),
 ) -> Session:
@@ -94,11 +94,11 @@ def reject_listener() -> RejectListener:
 
 
 class TestSession:
-    s1 = make_fake_session(key='1')
-    s1bis = make_fake_session(key='1')
-    s2 = make_fake_session(key='2')
-    s1_playing = make_fake_session(key='1', state='playing')
-    s1_paused = make_fake_session(key='1', state='paused')
+    s1 = make_fake_session(key="1")
+    s1bis = make_fake_session(key="1")
+    s2 = make_fake_session(key="2")
+    s1_playing = make_fake_session(key="1", state="playing")
+    s1_paused = make_fake_session(key="1", state="paused")
 
     is_same_cases = [
         (s1, s2, False),
@@ -108,11 +108,11 @@ class TestSession:
         (s1_playing, s1_paused, True),
     ]
 
-    @pytest.mark.parametrize('a, b, is_same', is_same_cases)
+    @pytest.mark.parametrize("a, b, is_same", is_same_cases)
     def test_hash(self, a: Session, b: Session, is_same: bool):
         assert (hash(a) == hash(b)) is is_same
 
-    @pytest.mark.parametrize('a, b, is_same', is_same_cases)
+    @pytest.mark.parametrize("a, b, is_same", is_same_cases)
     def test_eq(self, a: Session, b: Session, is_same: bool):
         assert (a == b) is is_same
 
@@ -136,7 +136,7 @@ class TestSessionDispatcher:
         self,
         accept_listener: AcceptListener,
     ):
-        session_key = '10'
+        session_key = "10"
         session = make_fake_session(key=session_key)
 
         dispatcher = SessionDispatcher(accept_listener)
@@ -156,11 +156,13 @@ class TestSessionDispatcher:
 
 
 class TestSessionDiscovery:
-    buffering_notif = make_fake_notification(state='buffering')
-    paused_notif = make_fake_notification(state='paused')
+    buffering_notif = make_fake_notification(state="buffering")
+    paused_notif = make_fake_notification(state="paused")
 
-    @pytest.mark.parametrize('notif', [buffering_notif, paused_notif])
-    def test_handle_notification__missing_notification_does_not_raise(self, notif: PlaybackNotification):
+    @pytest.mark.parametrize("notif", [buffering_notif, paused_notif])
+    def test_handle_notification__missing_notification_does_not_raise(
+        self, notif: PlaybackNotification
+    ):
         provider = Mock(spec=SessionProvider)
         provider.provide.side_effect = Mock(side_effect=SessionNotFoundError)
 

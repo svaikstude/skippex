@@ -29,14 +29,14 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         #  - When it's 'stopped', we've already sent a signal to the dispatcher.
 
         if not listener_accepted:
-            logger.debug('No extrapolation: listener rejected')
+            logger.debug("No extrapolation: listener rejected")
             return False
 
         session = cast(EpisodeSession, session)  # Safe because listener_accepted.
         intro_marker = session.intro_marker()
 
         if session.view_offset_ms >= intro_marker.end:
-            logger.debug('No extrapolation: beyond intro')
+            logger.debug("No extrapolation: beyond intro")
             return False
 
         # The listener accepted the session, and it may have skipped the intro.
@@ -52,33 +52,33 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
     def accept_session(self, session: Session) -> bool:
         if not isinstance(session, EpisodeSession):
             # Only TV shows have intro markers, other media don't interest us.
-            logger.debug('Ignored; not an episode')
+            logger.debug("Ignored; not an episode")
             return False
 
         if session in self._skipped:
-            logger.debug('Ignored; already skipped during this session')
+            logger.debug("Ignored; already skipped during this session")
             return False
 
-        if session.state != 'playing':
+        if session.state != "playing":
             logger.debug(f'Ignored; state is "{session.state}" instead of "playing"')
             return False
 
         if not session.playable.hasIntroMarker:
-            logger.debug(f'Ignored; has no intro marker')
+            logger.debug("Ignored; has no intro marker")
             return False
 
         return True
 
     def on_session_activity(self, session: Session):
         session = cast(EpisodeSession, session)  # Safe thanks to accept_session().
-        logger.debug(f'session_activity: {session}')
+        logger.debug(f"session_activity: {session}")
 
         intro_marker = session.intro_marker()
         view_offset_ms = session.view_offset_ms
 
-        logger.debug(f'session.key={session.key}')
-        logger.debug(f'session.view_offset_ms={session.view_offset_ms}')
-        logger.debug(f'intro_marker={intro_marker}')
+        logger.debug(f"session.key={session.key}")
+        logger.debug(f"session.view_offset_ms={session.view_offset_ms}")
+        logger.debug(f"intro_marker={intro_marker}")
 
         if intro_marker.start <= view_offset_ms < intro_marker.end:
             try:
@@ -89,16 +89,18 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
                         'Plex player not found for session; ensure "advertise '
                         'as player" is enabled'
                     )
-                logger.exception(f'Cannot skip intro for session {session.key}')
+                logger.exception(f"Cannot skip intro for session {session.key}")
                 return
 
             seekable.seek(intro_marker.end)
             self._skipped.add(session)
-            logger.info(f'Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})')
+            logger.info(
+                f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
+            )
         else:
-            logger.debug(f'Session {session.key}: did not skip (not viewing intro)')
+            logger.debug(f"Session {session.key}: did not skip (not viewing intro)")
 
-        logger.debug('-----')
+        logger.debug("-----")
 
     def on_session_removal(self, session: Session):
         self._skipped.discard(session)

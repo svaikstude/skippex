@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def _removesuffix(s: str, suffix: str) -> str:
     if s.endswith(suffix):
-        return s[:-len(suffix)]
+        return s[: -len(suffix)]
     return s
 
 
@@ -32,7 +32,7 @@ class Seekable(ABC):
 
 
 class SeekablePlexClient(Seekable):
-    _TIMEOUT_SUFFIX = '-timeout'
+    _TIMEOUT_SUFFIX = "-timeout"
 
     def __init__(self, client: PlexClient, timeout_sec: float = 5):
         self._client = client
@@ -54,7 +54,7 @@ class SeekablePlexClient(Seekable):
         new_qsl: List[Tuple[str, str]] = []
 
         for k, v in parse_qsl(p.query):
-            if k == 'type':
+            if k == "type":
                 new_v = _removesuffix(v, self._TIMEOUT_SUFFIX)
                 if new_v != v:
                     # The suffix was present, override the timeout.
@@ -67,11 +67,7 @@ class SeekablePlexClient(Seekable):
         new_path = urlunparse(p._replace(query=new_query))
 
         return self._original_query(
-            path=new_path,
-            method=method,
-            headers=headers,
-            timeout=timeout,
-            **kwargs
+            path=new_path, method=method, headers=headers, timeout=timeout, **kwargs
         )
 
     def seek(self, offset_ms: int):
@@ -83,16 +79,17 @@ class SeekablePlexClient(Seekable):
         seeks in less than a second. Therefore, we send the seeking command in
         a new thread and we only log what happens.
         """
+
         def _seek():
             def log_timeout_warning():
                 # About "Advertise as player": If the user disables that setting
                 # while Skippex is running, seeking will timeout (and not
                 # happen), even though PlexSeekableProvider found the client.
                 logger.warning(
-                    f'Seeking command timed out for {self._client}, but '
-                    f'seeking might still have happened. If not, please ensure '
+                    f"Seeking command timed out for {self._client}, but "
+                    f"seeking might still have happened. If not, please ensure "
                     f'that the "Advertise as player" setting is enabled for '
-                    f'your client.'
+                    f"your client."
                 )
 
             try:
@@ -100,22 +97,22 @@ class SeekablePlexClient(Seekable):
                 # to use the timeout set on this instance. This is the only way
                 # we have to "pass a message" to PlexClient.query() from this
                 # call.
-                self._client.seekTo(offset_ms, mtype=DEFAULT_MTYPE+self._TIMEOUT_SUFFIX)
+                self._client.seekTo(offset_ms, mtype=DEFAULT_MTYPE + self._TIMEOUT_SUFFIX)
             except requests.Timeout:
                 log_timeout_warning()
             except requests.ConnectionError as e:
                 # See https://github.com/psf/requests/issues/5430.
-                if 'timed out' in str(e):
+                if "timed out" in str(e):
                     log_timeout_warning()
                 raise
             except Exception:
-                logger.exception(f'Seeking failed for {self._client}')
+                logger.exception(f"Seeking failed for {self._client}")
             else:
-                logger.debug(f'Seeking succeeded for {self._client}')
+                logger.debug(f"Seeking succeeded for {self._client}")
 
         thread = threading.Thread(target=_seek, daemon=True)
         thread.start()
-        logger.debug(f'Sent seeking command to {self._client}')
+        logger.debug(f"Sent seeking command to {self._client}")
 
 
 class SeekableChromecastAdapter(Seekable):
@@ -180,7 +177,9 @@ class PlexSeekableProvider(SeekableProvider):
         for client in self._server.clients():
             if client.machineIdentifier == sess_machine_id:
                 return SeekablePlexClient(client)
-        raise PlexPlayerNotFoundError(f'could not find Plex player with machine ID {sess_machine_id}')
+        raise PlexPlayerNotFoundError(
+            f"could not find Plex player with machine ID {sess_machine_id}"
+        )
 
 
 class ChromecastNotFoundError(Exception):
@@ -200,8 +199,8 @@ class ChromecastMonitor:
         for cc in self._chromecasts.values():
             if cc.socket_client.host == ip:
                 return cc
-        logging.debug(f'Discovered Chromecasts: {self._chromecasts}')
-        raise ChromecastNotFoundError(f'could not find Chromecast with address {ip}')
+        logging.debug(f"Discovered Chromecasts: {self._chromecasts}")
+        raise ChromecastNotFoundError(f"could not find Chromecast with address {ip}")
 
     @synchronized
     def add_callback(self, uuid: UUID, name: str):
@@ -209,7 +208,7 @@ class ChromecastMonitor:
         chromecast = pychromecast.get_chromecast_from_service(service, self._zconf)
         chromecast.wait()
         self._chromecasts[uuid] = chromecast
-        logger.debug(f'Discovered new Chromecast: {chromecast}')
+        logger.debug(f"Discovered new Chromecast: {chromecast}")
 
     @synchronized
     def update_callback(self, uuid: UUID, name: str):
@@ -219,7 +218,7 @@ class ChromecastMonitor:
     @synchronized
     def remove_callback(self, uuid: UUID, name: str, service):
         chromecast = self._chromecasts.pop(uuid)
-        logger.debug(f'Removed discovered Chromecast: {chromecast}')
+        logger.debug(f"Removed discovered Chromecast: {chromecast}")
 
 
 class ChromecastSeekableProvider(SeekableProvider):
@@ -231,7 +230,7 @@ class ChromecastSeekableProvider(SeekableProvider):
             chromecast = self._monitor.get_chromecast_by_ip(session.player.address)
         except ChromecastNotFoundError as e:
             raise SeekableNotFoundError(
-                f'could not find Chromecast with address {session.player.address}'
+                f"could not find Chromecast with address {session.player.address}"
             ) from e
 
         plex_ctrl = PlexController()

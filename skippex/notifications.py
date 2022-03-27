@@ -1,6 +1,6 @@
 import inspect
 import json
-from typing import Any, Callable, Dict
+from typing import Callable
 from urllib.parse import urlparse, urlunparse
 
 from plexapi.server import PlexServer
@@ -34,11 +34,12 @@ class PlaybackNotification(TypedDict):
     key: str
     viewOffset: int  # In milliseconds.
     playQueueItemID: int
-    state: Literal['buffering', 'playing', 'paused', 'stopped']
+    state: Literal["buffering", "playing", "paused", "stopped"]
 
 
 class _MessageDict(TypedDict):
     """The format of each WebSocket frame emitted by Plex once parsed."""
+
     NotificationContainer: NotificationContainerDict
 
 
@@ -64,9 +65,9 @@ class NotificationListener:
         self._callback = callback
 
     def _get_ws_url(self) -> str:
-        endpoint = '/:/websockets/notifications'
+        endpoint = "/:/websockets/notifications"
         http_parse = urlparse(self._server.url(endpoint, includeToken=True))
-        return urlunparse(http_parse._replace(scheme='ws'))
+        return urlunparse(http_parse._replace(scheme="ws"))
 
     def run_forever(self):
         """Listens on the WebSocket and blocks indefinitely."""
@@ -76,7 +77,7 @@ class NotificationListener:
 
     def _on_message(self, message: str):
         msg_dict: _MessageDict = json.loads(message)
-        self._callback(msg_dict['NotificationContainer'])
+        self._callback(msg_dict["NotificationContainer"])
 
     def _on_error(self, e: Exception):
         raise e
