@@ -32,11 +32,6 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
             return False
 
         session = cast(EpisodeSession, session)  # Safe because listener_accepted.
-        intro_marker = session.intro_marker()
-
-        if session.view_offset_ms >= intro_marker.end:
-            logger.debug("No extrapolation: beyond intro")
-            return False
 
         # The listener accepted the session, and it may have skipped the intro.
         # In that case, we don't wanna extrapolate the session.

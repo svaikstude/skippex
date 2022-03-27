@@ -142,15 +142,6 @@ class TestSessionDispatcher:
 
         assert fake_session not in accept_listener.sessions
 
-    def test_dispatch_removal__discards_inactives(
-        self,
-        fake_session: Session,
-        accept_listener: AcceptListener,
-    ):
-        dispatcher = SessionDispatcher(accept_listener, removal_timeout_sec=0)
-        dispatcher.dispatch(fake_session)
-        assert fake_session not in accept_listener.sessions
-
 
 class TestSessionDiscovery:
     buffering_notif = make_fake_notification(state="buffering")
