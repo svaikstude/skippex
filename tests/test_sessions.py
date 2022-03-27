@@ -69,9 +69,6 @@ class FakeListener(SessionListener):
     def on_session_activity(self, session: Session):
         self.sessions.add(session)
 
-    def on_session_removal(self, session: Session):
-        self.sessions.remove(session)
-
 
 class AcceptListener(FakeListener):
     def accept_session(self, session: Session) -> bool:

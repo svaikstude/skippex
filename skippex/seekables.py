@@ -30,6 +30,10 @@ class Seekable(ABC):
     def seek(self, offset_ms: int):
         pass
 
+    @abstractmethod
+    def skip_next(self):
+        pass
+
 
 class SeekablePlexClient(Seekable):
     _TIMEOUT_SUFFIX = "-timeout"
@@ -87,9 +91,9 @@ class SeekablePlexClient(Seekable):
                 # happen), even though PlexSeekableProvider found the client.
                 logger.warning(
                     f"Seeking command timed out for {self._client}, but "
-                    f"seeking might still have happened. If not, please ensure "
-                    f'that the "Advertise as player" setting is enabled for '
-                    f"your client."
+                    "seeking might still have happened. If not, please ensure "
+                    'that the "Advertise as player" setting is enabled for '
+                    "your client."
                 )
 
             try:
@@ -113,6 +117,36 @@ class SeekablePlexClient(Seekable):
         thread = threading.Thread(target=_seek, daemon=True)
         thread.start()
         logger.debug(f"Sent seeking command to {self._client}")
+
+    def skip_next(self):
+        """Sends the next command in a non-blocking fashion."""
+
+        def _skip_next():
+            def log_timeout_warning():
+                logger.warning(
+                    f"Skipping to next command timed out for {self._client}, but "
+                    "skipping might still have happened. If not, please ensure "
+                    'that the "Advertise as player" setting is enabled for '
+                    "your client."
+                )
+
+            try:
+                self._client.skipNext(mtype=DEFAULT_MTYPE + self._TIMEOUT_SUFFIX)
+            except requests.Timeout:
+                log_timeout_warning()
+            except requests.ConnectionError as e:
+                # See https://github.com/psf/requests/issues/5430.
+                if "timed out" in str(e):
+                    log_timeout_warning()
+                raise
+            except Exception:
+                logger.exception(f"Skipping to next failed for {self._client}")
+            else:
+                logger.debug(f"Skipping to next succeeded for {self._client}")
+
+        thread = threading.Thread(target=_skip_next, daemon=True)
+        thread.start()
+        logger.debug(f"Sent skip to next command to {self._client}")
 
 
 class SeekableChromecastAdapter(Seekable):

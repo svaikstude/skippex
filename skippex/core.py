@@ -1,6 +1,6 @@
 from dataclasses import replace
 import logging
-from typing import Set, Tuple, cast
+from typing import Tuple, cast
 
 from .seekables import SeekableNotFoundError, SeekableProvider
 from .sessions import (
@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 class AutoSkipper(SessionListener, SessionExtrapolator):
     def __init__(self, seekable_provider: SeekableProvider):
-        self._skipped: Set[Session] = set()
         self._sp = seekable_provider
 
     def trigger_extrapolation(self, session: Session, listener_accepted: bool) -> bool:
@@ -41,7 +40,7 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
 
         # The listener accepted the session, and it may have skipped the intro.
         # In that case, we don't wanna extrapolate the session.
-        return session not in self._skipped
+        return session
 
     def extrapolate(self, session: Session) -> Tuple[Session, int]:
         session = cast(EpisodeSession, session)  # Safe thanks to trigger_extrapolation().
@@ -55,16 +54,8 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
             logger.debug("Ignored; not an episode")
             return False
 
-        if session in self._skipped:
-            logger.debug("Ignored; already skipped during this session")
-            return False
-
         if session.state != "playing":
             logger.debug(f'Ignored; state is "{session.state}" instead of "playing"')
-            return False
-
-        if not session.playable.hasIntroMarker:
-            logger.debug("Ignored; has no intro marker")
             return False
 
         return True
@@ -74,11 +65,13 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         logger.debug(f"session_activity: {session}")
 
         intro_marker = session.intro_marker()
+        ending_marker = session.ending_marker()
         view_offset_ms = session.view_offset_ms
 
         logger.debug(f"session.key={session.key}")
         logger.debug(f"session.view_offset_ms={session.view_offset_ms}")
         logger.debug(f"intro_marker={intro_marker}")
+        logger.debug(f"ending_marker={ending_marker}")
 
         if intro_marker.start <= view_offset_ms < intro_marker.end:
             try:
@@ -93,14 +86,24 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
                 return
 
             seekable.seek(intro_marker.end)
-            self._skipped.add(session)
             logger.info(
                 f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
             )
+        elif view_offset_ms >= ending_marker:
+            try:
+                seekable = self._sp.provide_seekable(session)
+            except SeekableNotFoundError as e:
+                if e.has_plex_player_not_found():
+                    logger.error(
+                        'Plex player not found for session; ensure "advertise '
+                        'as player" is enabled'
+                    )
+                logger.exception(f"Cannot skip to next item for session {session.key}")
+                return
+
+            seekable.skip_next()
+            logger.info(f"Session {session.key}: skipped to next item")
         else:
-            logger.debug(f"Session {session.key}: did not skip (not viewing intro)")
+            logger.debug(f"Session {session.key}: did not skip")
 
         logger.debug("-----")
-
-    def on_session_removal(self, session: Session):
-        self._skipped.discard(session)

@@ -74,6 +74,9 @@ class EpisodeSession(Session):
         internal = next(m for m in self.playable.markers if m.type == "intro")
         return IntroMarker(start=internal.start, end=internal.end)
 
+    def ending_marker(self) -> int:
+        return self.playable.duration - 2000
+
 
 class SessionFactory:
     @classmethod
@@ -91,11 +94,6 @@ class SessionListener(ABC):
     @abstractmethod
     def on_session_activity(self, session: Session):
         """Called iff accept_session(session) returns True."""
-        pass
-
-    @abstractmethod
-    def on_session_removal(self, session: Session):
-        """Called iff on_session_activity(session) was called at some point."""
         pass
 
 
@@ -156,7 +154,6 @@ class SessionDispatcher:
             logger.info(
                 f"Session {session.key} ended: {session.player} stopped playing {session.playable}"
             )
-        self._listener.on_session_removal(session)
         del self._last_active[session]
 
     def dispatch_removal(self, removed_key: SessionKey) -> bool:
