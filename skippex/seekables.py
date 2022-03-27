@@ -156,6 +156,9 @@ class SeekableChromecastAdapter(Seekable):
     def seek(self, offset_ms: int):
         self._plex_ctrl.seek(offset_ms / 1000)
 
+    def skip_next(self):
+        self._plex_ctrl.next()
+
 
 class SeekableNotFoundError(Exception):
     def has_plex_player_not_found(self) -> bool:

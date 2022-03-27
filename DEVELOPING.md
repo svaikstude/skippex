@@ -16,23 +16,23 @@ $ python release.py <version>
 ## Building a development Docker image
 
 ```console
-$ docker build -t ghcr.io/sprt/skippex:dev .
+$ docker build -t ghcr.io/svaikstude/skippex:dev .
 ```
 
 And later running this dev image:
 
 ```console
-$ docker run --rm -v skippex-dev:/data --network host ghcr.io/sprt/skippex:dev run
+$ docker run --rm -v config:/data --network host ghcr.io/svaikstude/skippex:dev run
 ```
 
 Running the tests inside it:
 
 ```console
-$ docker run --rm -v skippex-dev:/data --network host --entrypoint sh ghcr.io/sprt/skippex:dev -c ". /venv/bin/activate && python -m pytest"
+$ docker run --rm -v config:/data --network host --entrypoint sh ghcr.io/svaikstude/skippex:dev -c ". /venv/bin/activate && python -m pytest"
 ```
 
 Inspecting it with a shell:
 
 ```console
-$ docker run --rm -v skippex-dev:/data --network host --entrypoint sh -it ghcr.io/sprt/skippex:dev
+$ docker run --rm -v config:/data --network host --entrypoint sh -it ghcr.io/svaikstude/skippex:dev
 ```

@@ -34,7 +34,7 @@ RUN poetry build && /venv/bin/pip install dist/*.whl
 
 FROM base as final
 
-LABEL org.opencontainers.image.source=https://github.com/sprt/skippex
+LABEL org.opencontainers.image.source=https://github.com/svaikstude/skippex
 
 VOLUME /data
 

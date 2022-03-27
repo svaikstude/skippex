@@ -5,7 +5,7 @@ description = "Automatic 'skip intro' for Plex with Chromecast support"
 authors = ["sprt <hellosprt@gmail.com>"]
 license = "MPL-2.0"
 readme = "README.md"
-repository = "https://github.com/sprt/skippex"
+repository = "https://github.com/svaikstude/skippex"
 keywords = ["plex", "chromecast", "mediaserver"]
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -21,7 +21,7 @@ please report them!
 Installing Skippex through **Docker** is the easiest way to get started:
 
 ```console
-$ docker pull ghcr.io/sprt/skippex
+$ docker pull ghcr.io/svaikstude/skippex
 ```
 
 *Docker-compose example coming soon.*
@@ -55,7 +55,7 @@ your Plex account.
   </tr>
   <tr>
     <td>
-      <code>$ docker run -v skippex:/data --network host ghcr.io/sprt/skippex auth</code>
+      <code>$ docker run -v skippex:/data --network host ghcr.io/svaikstude/skippex auth</code>
     </td>
     <td>
       <code>$ skippex auth</code>
@@ -73,7 +73,7 @@ playback sessions and automatically skip intros for you on supported devices:
   </tr>
   <tr>
     <td>
-      <code>$ docker run -v skippex:/data --network host ghcr.io/sprt/skippex run</code>
+      <code>$ docker run -v skippex:/data --network host ghcr.io/svaikstude/skippex run</code>
     </td>
     <td>
       <code>$ skippex run</code>
@@ -107,7 +107,7 @@ The NVIDIA SHIELD might be supported as well, but I don't have one so I can't
 test it. Other players might also be supported. In any case, please inform me
 by [creating a new issue][new_issue], so I can add your player to this list.
 
-[new_issue]: https://github.com/sprt/skippex/issues/new
+[new_issue]: https://github.com/svaikstude/skippex/issues/new
 
 ## Known issues
 
