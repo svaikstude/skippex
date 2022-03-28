@@ -69,6 +69,24 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         logger.debug(f"intro_marker={intro_marker}")
         logger.debug(f"ending_marker={ending_marker}")
 
+        if view_offset_ms >= ending_marker:
+            try:
+                seekable = self._sp.provide_seekable(session)
+            except SeekableNotFoundError as e:
+                if e.has_plex_player_not_found():
+                    logger.error(
+                        'Plex player not found for session; ensure "advertise '
+                        'as player" is enabled'
+                    )
+                logger.exception(f"Cannot skip to next item for session {session.key}")
+                return
+
+            seekable.skip_next()
+            logger.info(f"Session {session.key}: skipped to next item")
+
+        if not intro_marker:
+            return
+
         if intro_marker.start <= view_offset_ms < intro_marker.end:
             if session in self._skipped:
                 return
@@ -88,20 +106,6 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
             logger.info(
                 f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
             )
-        elif view_offset_ms >= ending_marker:
-            try:
-                seekable = self._sp.provide_seekable(session)
-            except SeekableNotFoundError as e:
-                if e.has_plex_player_not_found():
-                    logger.error(
-                        'Plex player not found for session; ensure "advertise '
-                        'as player" is enabled'
-                    )
-                logger.exception(f"Cannot skip to next item for session {session.key}")
-                return
-
-            seekable.skip_next()
-            logger.info(f"Session {session.key}: skipped to next item")
         else:
             logger.debug(f"Session {session.key}: did not skip")
 
