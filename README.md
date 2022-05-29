@@ -18,7 +18,7 @@ please report them!
 
 ## Installation
 
-Installing Skippex through **Docker** is the easiest way to get started:
+Installing through **Docker** is the easiest way to get started:
 
 ```console
 $ docker pull ghcr.io/svaikstude/skippex
