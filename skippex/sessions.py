@@ -1,8 +1,8 @@
+import logging
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
-import threading
 from typing import Dict, NamedTuple, Optional, Tuple
 
 from plexapi.base import Playable
@@ -13,7 +13,6 @@ from typing_extensions import Literal
 from wrapt import synchronized
 
 from .notifications import NotificationContainerDict, PlaybackNotification
-
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ class EpisodeSession(Session):
         if not self.playable.hasIntroMarker:
             return None
         internal = next(m for m in self.playable.markers if m.type == "intro")
-        return IntroMarker(start=internal.start, end=internal.end)
+        return IntroMarker(start=internal.start + 3000, end=internal.end)
 
     def ending_marker(self) -> int:
         return self.playable.duration - 5000
