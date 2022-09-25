@@ -3,7 +3,7 @@ import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, NamedTuple, Optional, Tuple
+from typing import Dict, NamedTuple, Tuple
 
 from plexapi.base import Playable
 from plexapi.client import PlexClient
@@ -67,14 +67,15 @@ class EpisodeSession(Session):
             view_offset_ms=int(episode.viewOffset),
         )
 
-    def intro_marker(self) -> Optional[IntroMarker]:
+    def intro_marker(self) -> IntroMarker:
         if not self.playable.hasIntroMarker:
-            return None
+            start = 0
+            end = 0
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if internal.end < self.playable.duration / 2:
-                return IntroMarker(start=internal.start + 3000, end=internal.end)
-            else:
-                return None
+                start = internal.start + 3000
+                end = internal.end
+        return IntroMarker(start=start, end=end)
 
     def ending_marker(self) -> int:
         end = self.playable.duration - 3000
@@ -85,16 +86,17 @@ class EpisodeSession(Session):
                 return internal.start
         return end
 
-    def pre_credits_scene_marker(self) -> Optional[IntroMarker]:
+    def pre_credits_scene_marker(self) -> IntroMarker:
         if not self.playable.hasIntroMarker:
-            return None
+            start = self.playable.duration + 1000
+            end = start + 1000
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if (internal.end < self.ending_marker()) and (
                 internal.start > self.intro_marker().end
             ):
-                return IntroMarker(start=internal.start + 3000, end=internal.end - 2000)
-            else:
-                return None
+                start = internal.start + 3000
+                end = internal.end - 2000
+        return IntroMarker(start=start, end=end)
 
 
 class SessionFactory:

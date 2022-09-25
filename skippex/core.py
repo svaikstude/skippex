@@ -66,67 +66,33 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         logger.debug(f"pre_credits_scene_marker={pre_credits_scene_marker}")
         logger.debug(f"ending_marker={ending_marker}")
 
-        if view_offset_ms >= ending_marker:
-            try:
-                seekable = self._sp.provide_seekable(session)
-            except SeekableNotFoundError as e:
-                if e.has_plex_player_not_found():
-                    logger.error(
-                        'Plex player not found for session; ensure "advertise '
-                        'as player" is enabled'
-                    )
-                logger.exception(f"Cannot skip to next item for session {session.key}")
-                return
+        try:
+            seekable = self._sp.provide_seekable(session)
+        except SeekableNotFoundError as e:
+            if e.has_plex_player_not_found():
+                logger.error(
+                    'Plex player not found for session; ensure "advertise ' 'as player" is enabled'
+                )
+            logger.exception(f"Cannot skip to next item for session {session.key}")
+            return
 
-            seekable.skip_next()
-            self.on_session_removal(session)
-            logger.info(f"Session {session.key}: skipped to next item")
-
-        if intro_marker:
-            if intro_marker.start <= view_offset_ms < intro_marker.end:
-                if session in self._skipped_intro:
-                    return
-                try:
-                    seekable = self._sp.provide_seekable(session)
-                except SeekableNotFoundError as e:
-                    if e.has_plex_player_not_found():
-                        logger.error(
-                            'Plex player not found for session; ensure "advertise '
-                            'as player" is enabled'
-                        )
-                    logger.exception(f"Cannot skip intro for session {session.key}")
-                    return
-
+        if intro_marker.start <= view_offset_ms < intro_marker.end:
+            if session not in self._skipped_intro:
                 seekable.seek(intro_marker.end)
                 self._skipped_intro.add(session)
                 logger.info(
                     f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
                 )
-            else:
-                logger.debug(f"Session {session.key}: did not skip")
-
-        if pre_credits_scene_marker:
-            if pre_credits_scene_marker.start <= view_offset_ms < pre_credits_scene_marker.end:
-                if session in self._skipped_credits:
-                    return
-                try:
-                    seekable = self._sp.provide_seekable(session)
-                except SeekableNotFoundError as e:
-                    if e.has_plex_player_not_found():
-                        logger.error(
-                            'Plex player not found for session; ensure "advertise '
-                            'as player" is enabled'
-                        )
-                    logger.exception(f"Cannot skip credits for session {session.key}")
-                    return
-
+        elif pre_credits_scene_marker.start <= view_offset_ms < pre_credits_scene_marker.end:
+            if session not in self._skipped_credits:
                 seekable.seek(pre_credits_scene_marker.end)
                 self._skipped_credits.add(session)
                 logger.info(
-                    f"Session {session.key}: skipped credits (seeked from {view_offset_ms} to {pre_credits_scene_marker.end})"  # noqa: E501
+                    f"Session {session.key}: skipped credits (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
                 )
-            else:
-                logger.debug(f"Session {session.key}: did not skip")
+        elif view_offset_ms >= ending_marker:
+            seekable.skip_next()
+            logger.info(f"Session {session.key}: skipped to next item")
 
         logger.debug("-----")
 
