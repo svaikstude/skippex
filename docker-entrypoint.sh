@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-. /venv/bin/activate
+. /app/venv/bin/activate
 exec python -m skippex $@
