@@ -50,7 +50,7 @@ RUN mkdir -p "$XDG_DATA_HOME" "$XDG_RUNTIME_DIR"
 
 COPY docker-entrypoint.sh .
 COPY ./pyproject.toml ./pyproject.toml
-COPY --from=builder /venv /venv
+COPY --from=builder /app/venv /app/venv
 COPY ./tests ./tests
 RUN chmod +x docker-entrypoint.sh
 
