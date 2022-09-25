@@ -1,15 +1,9 @@
-from dataclasses import replace
 import logging
+from dataclasses import replace
 from typing import Set, Tuple, cast
 
 from .seekables import SeekableNotFoundError, SeekableProvider
-from .sessions import (
-    EpisodeSession,
-    Session,
-    SessionExtrapolator,
-    SessionListener,
-)
-
+from .sessions import EpisodeSession, Session, SessionExtrapolator, SessionListener
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +55,14 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         logger.debug(f"session_activity: {session}")
 
         intro_marker = session.intro_marker()
+        pre_credits_scene_marker = session.pre_credits_scene_marker()
         ending_marker = session.ending_marker()
         view_offset_ms = session.view_offset_ms
 
         logger.debug(f"session.key={session.key}")
         logger.debug(f"session.view_offset_ms={session.view_offset_ms}")
         logger.debug(f"intro_marker={intro_marker}")
+        logger.debug(f"pre_credits_scene_marker={pre_credits_scene_marker}")
         logger.debug(f"ending_marker={ending_marker}")
 
         if view_offset_ms >= ending_marker:
