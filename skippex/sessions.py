@@ -68,31 +68,26 @@ class EpisodeSession(Session):
         )
 
     def intro_marker(self) -> IntroMarker:
-        if not self.playable.hasIntroMarker:
-            return IntroMarker(start=0, end=0)
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if internal.end < self.playable.duration / 2:
                 return IntroMarker(start=internal.start + 3000, end=internal.end)
+        return IntroMarker(start=0, end=0)
 
     def ending_marker(self) -> int:
         end = self.playable.duration - 3000
-        if not self.playable.hasIntroMarker:
-            return end
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if internal.end >= end:
                 return internal.start
         return end
 
     def pre_credits_scene_marker(self) -> IntroMarker:
-        if not self.playable.hasIntroMarker:
-            return IntroMarker(
-                start=self.playable.duration + 1000, end=self.playable.duration + 2000
-            )
+        end = self.playable.duration + 1000
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if (internal.end < self.ending_marker()) and (
                 internal.start > self.intro_marker().end
             ):
                 return IntroMarker(start=internal.start + 3000, end=internal.end - 2000)
+        return IntroMarker(start=end, end=end + 1000)
 
 
 class SessionFactory:
