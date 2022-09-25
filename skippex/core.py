@@ -1,8 +1,8 @@
 import logging
 from dataclasses import replace
-from typing import Set, Tuple, cast
+from typing import Optional, Set, Tuple, cast
 
-from .seekables import SeekableNotFoundError, SeekableProvider
+from .seekables import Seekable, SeekableNotFoundError, SeekableProvider
 from .sessions import EpisodeSession, Session, SessionExtrapolator, SessionListener
 
 logger = logging.getLogger(__name__)
@@ -66,35 +66,42 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
         logger.debug(f"pre_credits_scene_marker={pre_credits_scene_marker}")
         logger.debug(f"ending_marker={ending_marker}")
 
+        if intro_marker.start <= view_offset_ms < intro_marker.end:
+            seekable = self._get_seekable(session=session)
+            if seekable:
+                if session not in self._skipped_intro:
+                    seekable.seek(intro_marker.end)
+                    self._skipped_intro.add(session)
+                    logger.info(
+                        f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
+                    )
+        if pre_credits_scene_marker.start <= view_offset_ms < pre_credits_scene_marker.end:
+            seekable = self._get_seekable(session=session)
+            if seekable:
+                if session not in self._skipped_credits:
+                    seekable.seek(pre_credits_scene_marker.end)
+                    self._skipped_credits.add(session)
+                    logger.info(
+                        f"Session {session.key}: skipped credits (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
+                    )
+        if view_offset_ms >= ending_marker:
+            seekable = self._get_seekable(session=session)
+            if seekable:
+                seekable.skip_next()
+                logger.info(f"Session {session.key}: skipped to next item")
+
+        logger.debug("-----")
+
+    def _get_seekable(self, session: Session) -> Optional[Seekable]:
         try:
-            seekable = self._sp.provide_seekable(session)
+            return self._sp.provide_seekable(session)
         except SeekableNotFoundError as e:
             if e.has_plex_player_not_found():
                 logger.error(
                     'Plex player not found for session; ensure "advertise ' 'as player" is enabled'
                 )
             logger.exception(f"Cannot skip to next item for session {session.key}")
-            return
-
-        if intro_marker.start <= view_offset_ms < intro_marker.end:
-            if session not in self._skipped_intro:
-                seekable.seek(intro_marker.end)
-                self._skipped_intro.add(session)
-                logger.info(
-                    f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
-                )
-        elif pre_credits_scene_marker.start <= view_offset_ms < pre_credits_scene_marker.end:
-            if session not in self._skipped_credits:
-                seekable.seek(pre_credits_scene_marker.end)
-                self._skipped_credits.add(session)
-                logger.info(
-                    f"Session {session.key}: skipped credits (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
-                )
-        elif view_offset_ms >= ending_marker:
-            seekable.skip_next()
-            logger.info(f"Session {session.key}: skipped to next item")
-
-        logger.debug("-----")
+            return None
 
     def on_session_removal(self, session: Session):
         self._skipped_intro.discard(session)
