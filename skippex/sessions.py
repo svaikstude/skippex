@@ -93,7 +93,6 @@ class SessionFactory:
     @classmethod
     def make(cls, playable: Playable) -> Session:
         if isinstance(playable, Episode):
-            playable.reload(key=None, includeMarkers=True)
             return EpisodeSession.from_playable(playable)
         return Session.from_playable(playable)
 
