@@ -89,7 +89,7 @@ class EpisodeSession(Session):
             return None
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if (internal.end < self.ending_marker() - 5000) and (
-                internal.end > self.playable.duration / 2
+                internal.start > self.intro_marker().start
             ):
                 return IntroMarker(start=internal.start + 3000, end=internal.end)
             else:
