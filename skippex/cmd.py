@@ -1,19 +1,19 @@
 import argparse
-from functools import partial
 import logging
 import os
-from pathlib import Path
 import shelve
 import sys
 import tempfile
-from typing import Optional
 import webbrowser
+from functools import partial
+from pathlib import Path
+from typing import Optional
 
-from pid import PidFile, PidFileError
-from plexapi.myplex import MyPlexAccount, MyPlexResource
 import pychromecast
 import xdg
 import zeroconf
+from pid import PidFile, PidFileError
+from plexapi.myplex import MyPlexAccount, MyPlexResource
 
 from .auth import PlexApplication, PlexAuthClient
 from .core import AutoSkipper
@@ -26,7 +26,6 @@ from .seekables import (
 )
 from .sessions import SessionDiscovery, SessionDispatcher, SessionProvider
 from .stores import Database
-
 
 # Note: Don't assume that the XDG paths are all different from each other (see
 # Dockerfile).
@@ -115,15 +114,16 @@ def cmd_run(args: argparse.Namespace, db: Database, app: PlexApplication) -> Opt
     server = server_resource.connect()
 
     # Build the object hierarchy.
-
-    cc_listener = pychromecast.discovery.CastListener()
     zconf = zeroconf.Zeroconf()
-    cc_monitor = ChromecastMonitor(cc_listener, zconf)
-
-    cc_listener.add_callback = cc_monitor.add_callback
-    cc_listener.update_callback = cc_monitor.update_callback
-    cc_listener.remove_callback = cc_monitor.remove_callback
-    pychromecast.discovery.start_discovery(cc_listener, zconf)
+    cc_monitor = ChromecastMonitor(zconf)
+    cc_listener = pychromecast.discovery.SimpleCastListener(
+        add_callback=cc_monitor.add_callback,
+        remove_callback=cc_monitor.remove_callback,
+        update_callback=cc_monitor.update_callback,
+    )
+    cc_browser = pychromecast.discovery.CastBrowser(cc_listener, zconf)
+    cc_monitor.add_browser(browser=cc_browser)
+    cc_browser.start_discovery()
 
     seekable_provider = SeekableProviderChain(
         [

@@ -225,10 +225,13 @@ class ChromecastNotFoundError(Exception):
 class ChromecastMonitor:
     # The callbacks are called from a thread different from the main thread.
 
-    def __init__(self, listener: pychromecast.CastListener, zconf: Zeroconf):
-        self._listener = listener
+    def __init__(self, zconf: Zeroconf):
+        self._browser = None
         self._zconf = zconf
         self._chromecasts: Dict[UUID, pychromecast.Chromecast] = {}
+
+    def add_browser(self, browser: pychromecast.CastBrowser):
+        self._browser = browser
 
     @synchronized
     def get_chromecast_by_ip(self, ip: str) -> pychromecast.Chromecast:
@@ -240,8 +243,9 @@ class ChromecastMonitor:
 
     @synchronized
     def add_callback(self, uuid: UUID, name: str):
-        service = self._listener.services[uuid]
-        chromecast = pychromecast.get_chromecast_from_service(service, self._zconf)
+        chromecast = pychromecast.get_chromecast_from_cast_info(
+            self._browser.devices[uuid], self._zconf
+        )
         chromecast.wait()
         self._chromecasts[uuid] = chromecast
         logger.debug(f"Discovered new Chromecast: {chromecast}")
