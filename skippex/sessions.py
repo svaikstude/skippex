@@ -83,6 +83,7 @@ class EpisodeSession(Session):
         for internal in (m for m in self.playable.markers if m.type == "intro"):
             if internal.end >= end:
                 return internal.start
+        return end
 
     def pre_credits_scene_marker(self) -> Optional[IntroMarker]:
         if not self.playable.hasIntroMarker:
