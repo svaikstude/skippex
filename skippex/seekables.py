@@ -1,20 +1,19 @@
-from abc import ABC, abstractmethod
 import logging
 import threading
+from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from uuid import UUID
 
-from plexapi.client import DEFAULT_MTYPE, PlexClient
-from plexapi.server import PlexServer
 import pychromecast
-from pychromecast.controllers.plex import PlexController
 import requests
+from plexapi.client import PlexClient
+from plexapi.server import PlexServer
+from pychromecast.controllers.plex import PlexController
 from wrapt.decorators import synchronized
 from zeroconf import Zeroconf
 
 from .sessions import Session
-
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +100,7 @@ class SeekablePlexClient(Seekable):
                 # to use the timeout set on this instance. This is the only way
                 # we have to "pass a message" to PlexClient.query() from this
                 # call.
-                self._client.seekTo(offset_ms, mtype=DEFAULT_MTYPE + self._TIMEOUT_SUFFIX)
+                self._client.seekTo(offset_ms)
             except requests.Timeout:
                 log_timeout_warning()
             except requests.ConnectionError as e:
@@ -131,7 +130,7 @@ class SeekablePlexClient(Seekable):
                 )
 
             try:
-                self._client.skipNext(mtype=DEFAULT_MTYPE + self._TIMEOUT_SUFFIX)
+                self._client.skipNext()
             except requests.Timeout:
                 log_timeout_warning()
             except requests.ConnectionError as e:
