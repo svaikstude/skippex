@@ -77,7 +77,7 @@ class EpisodeSession(Session):
                 return None
 
     def ending_marker(self) -> int:
-        end = self.playable.duration - 5000
+        end = self.playable.duration - 3000
         if not self.playable.hasIntroMarker:
             return end
         for internal in (m for m in self.playable.markers if m.type == "intro"):
