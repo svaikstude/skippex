@@ -7,7 +7,7 @@ from uuid import UUID
 
 import pychromecast
 import requests
-from plexapi.client import PlexClient
+from plexapi.client import DEFAULT_MTYPE, PlexClient
 from plexapi.server import PlexServer
 from pychromecast.controllers.plex import PlexController
 from wrapt.decorators import synchronized
@@ -100,7 +100,7 @@ class SeekablePlexClient(Seekable):
                 # to use the timeout set on this instance. This is the only way
                 # we have to "pass a message" to PlexClient.query() from this
                 # call.
-                self._client.seekTo(offset_ms)
+                self._client.seekTo(offset_ms, mtype=DEFAULT_MTYPE + self._TIMEOUT_SUFFIX)
             except requests.Timeout:
                 log_timeout_warning()
             except requests.ConnectionError as e:
@@ -130,7 +130,7 @@ class SeekablePlexClient(Seekable):
                 )
 
             try:
-                self._client.skipNext()
+                self._client.skipNext(mtype=DEFAULT_MTYPE + self._TIMEOUT_SUFFIX)
             except requests.Timeout:
                 log_timeout_warning()
             except requests.ConnectionError as e:
