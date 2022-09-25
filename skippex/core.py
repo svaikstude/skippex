@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 class AutoSkipper(SessionListener, SessionExtrapolator):
     def __init__(self, seekable_provider: SeekableProvider):
         self._sp = seekable_provider
-        self._skipped: Set[Session] = set()
+        self._skipped_intro: Set[Session] = set()
+        self._skipped_credits: Set[Session] = set()
 
     def trigger_extrapolation(self, session: Session, listener_accepted: bool) -> bool:
         # Note it's only useful to do this when the state is 'playing':
@@ -78,34 +79,57 @@ class AutoSkipper(SessionListener, SessionExtrapolator):
                 return
 
             seekable.skip_next()
+            self.on_session_removal(session)
             logger.info(f"Session {session.key}: skipped to next item")
 
-        if not intro_marker:
-            return
+        if intro_marker:
+            if intro_marker.start <= view_offset_ms < intro_marker.end:
+                if session in self._skipped_intro:
+                    return
+                try:
+                    seekable = self._sp.provide_seekable(session)
+                except SeekableNotFoundError as e:
+                    if e.has_plex_player_not_found():
+                        logger.error(
+                            'Plex player not found for session; ensure "advertise '
+                            'as player" is enabled'
+                        )
+                    logger.exception(f"Cannot skip intro for session {session.key}")
+                    return
 
-        if intro_marker.start <= view_offset_ms < intro_marker.end:
-            if session in self._skipped:
-                return
-            try:
-                seekable = self._sp.provide_seekable(session)
-            except SeekableNotFoundError as e:
-                if e.has_plex_player_not_found():
-                    logger.error(
-                        'Plex player not found for session; ensure "advertise '
-                        'as player" is enabled'
-                    )
-                logger.exception(f"Cannot skip intro for session {session.key}")
-                return
+                seekable.seek(intro_marker.end)
+                self._skipped_intro.add(session)
+                logger.info(
+                    f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
+                )
+            else:
+                logger.debug(f"Session {session.key}: did not skip")
 
-            seekable.seek(intro_marker.end)
-            self._skipped.add(session)
-            logger.info(
-                f"Session {session.key}: skipped intro (seeked from {view_offset_ms} to {intro_marker.end})"  # noqa: E501
-            )
-        else:
-            logger.debug(f"Session {session.key}: did not skip")
+        if pre_credits_scene_marker:
+            if pre_credits_scene_marker.start <= view_offset_ms < pre_credits_scene_marker.end:
+                if session in self._skipped_credits:
+                    return
+                try:
+                    seekable = self._sp.provide_seekable(session)
+                except SeekableNotFoundError as e:
+                    if e.has_plex_player_not_found():
+                        logger.error(
+                            'Plex player not found for session; ensure "advertise '
+                            'as player" is enabled'
+                        )
+                    logger.exception(f"Cannot skip credits for session {session.key}")
+                    return
+
+                seekable.seek(pre_credits_scene_marker.end)
+                self._skipped_credits.add(session)
+                logger.info(
+                    f"Session {session.key}: skipped credits (seeked from {view_offset_ms} to {pre_credits_scene_marker.end})"  # noqa: E501
+                )
+            else:
+                logger.debug(f"Session {session.key}: did not skip")
 
         logger.debug("-----")
 
     def on_session_removal(self, session: Session):
-        self._skipped.discard(session)
+        self._skipped_intro.discard(session)
+        self._skipped_credits.discard(session)

@@ -92,7 +92,7 @@ class EpisodeSession(Session):
             if (internal.end < self.ending_marker() - 5000) and (
                 internal.start > self.intro_marker().start
             ):
-                return IntroMarker(start=internal.start + 3000, end=internal.end)
+                return IntroMarker(start=internal.start + 3000, end=internal.end - 2000)
             else:
                 return None
 
