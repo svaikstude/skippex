@@ -58,6 +58,7 @@ class EpisodeSession(Session):
     def from_playable(cls, episode: Episode) -> "EpisodeSession":
         assert not episode.isFullObject()  # Probably dangerous wrt viewOffset otherwise.
         player = episode.players[0]
+        logger.debug(episode.markers)
 
         return cls(
             key=str(episode.sessionKey),
@@ -68,25 +69,23 @@ class EpisodeSession(Session):
         )
 
     def intro_marker(self) -> IntroMarker:
-        for internal in (m for m in self.playable.markers if m.type == "intro"):
-            if internal.end < self.playable.duration / 2:
-                return IntroMarker(start=internal.start + 3000, end=internal.end)
+        for marker in (m for m in self.playable.markers if m.type == "intro"):
+            if marker.end < self.playable.duration / 2:
+                return IntroMarker(start=marker.start + 3000, end=marker.end)
         return IntroMarker(start=0, end=0)
 
     def ending_marker(self) -> int:
         end = self.playable.duration - 3000
-        for internal in (m for m in self.playable.markers if m.type == "intro"):
-            if internal.end >= end:
-                return internal.start
+        for marker in (m for m in self.playable.markers if m.type == "intro"):
+            if marker.end >= end:
+                return marker.start
         return end
 
     def pre_credits_scene_marker(self) -> IntroMarker:
         end = self.playable.duration + 1000
-        for internal in (m for m in self.playable.markers if m.type == "intro"):
-            if (internal.end < self.ending_marker()) and (
-                internal.start > self.intro_marker().end
-            ):
-                return IntroMarker(start=internal.start + 3000, end=internal.end - 2000)
+        for marker in (m for m in self.playable.markers if m.type == "intro"):
+            if (marker.end < self.ending_marker()) and (marker.start > self.intro_marker().end):
+                return IntroMarker(start=marker.start + 3000, end=marker.end - 2000)
         return IntroMarker(start=end, end=end + 1000)
 
 
