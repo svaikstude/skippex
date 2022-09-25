@@ -19,16 +19,20 @@ FROM base as builder
 ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
-    POETRY_VERSION=1.2.0
+    POETRY_VERSION=1.2.1 \
+    VIRTUAL_ENV=/app/venv/
 
-RUN pip install "poetry==$POETRY_VERSION"
-RUN python -m venv /venv
+ENV PATH=$VIRTUAL_ENV/bin:$PATH
+
+RUN python -m pip install "poetry==$POETRY_VERSION" \
+    && python -m venv $VIRTUAL_ENV
+RUN python -m pip install -U pip
 
 COPY pyproject.toml poetry.lock ./
-RUN poetry export --dev -f requirements.txt | /venv/bin/pip install -r /dev/stdin
+RUN poetry install --no-interaction --no-ansi
 
 COPY . .
-RUN poetry build && /venv/bin/pip install dist/*.whl
+RUN poetry build && pip install dist/*.whl
 
 # final
 
