@@ -58,7 +58,7 @@ class EpisodeSession(Session):
     def from_playable(cls, episode: Episode) -> "EpisodeSession":
         assert not episode.isFullObject()  # Probably dangerous wrt viewOffset otherwise.
         player = episode.players[0]
-        logger.debug(episode.markers)
+        logger.info(episode._data)
 
         return cls(
             key=str(episode.sessionKey),
