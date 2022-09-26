@@ -340,11 +340,11 @@ test = ["appdirs (==1.4.4)", "pytest (>=6)", "pytest-cov (>=2.7)", "pytest-mock 
 
 [[package]]
 name = "PlexAPI"
-version = "4.13.0"
+version = "4.2.0"
 description = "Python bindings for the Plex API."
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.5"
 
 [package.dependencies]
 requests = "*"
@@ -698,7 +698,7 @@ ifaddr = ">=0.1.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<4.0"
-content-hash = "678a4a4d3ac4f1bfe316a72d970cc0dad268195afd64ed9135c319a94a7158a4"
+content-hash = "c4e6d1d8c89e130530019ef66c3ca889f207f3e41cf602a047faf57ef805f261"
 
 [metadata.files]
 appdirs = [
@@ -868,8 +868,7 @@ platformdirs = [
     {file = "platformdirs-2.4.0.tar.gz", hash = "sha256:367a5e80b3d04d2428ffa76d33f124cf11e8fff2acdaa9b43d545f5c7d661ef2"},
 ]
 PlexAPI = [
-    {file = "PlexAPI-4.13.0-py3-none-any.whl", hash = "sha256:4d442caaecf58fe6abd962b6ca24627387b031c17b84e9d063a75f05abf5684b"},
-    {file = "PlexAPI-4.13.0.tar.gz", hash = "sha256:86e92cdb2fa6f38f7c518ef42144cd5276a69b083d0df95e9a9fede881e1fa83"},
+    {file = "PlexAPI-4.2.0.tar.gz", hash = "sha256:1e9b5467e8550a3cdd43db16fa4b501c103673fcc70a0543505bdc58b0909b99"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},

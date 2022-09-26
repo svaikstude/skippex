@@ -56,8 +56,7 @@ class EpisodeSession(Session):
 
     @classmethod
     def from_playable(cls, episode: Episode) -> "EpisodeSession":
-        if not episode.isFullObject():  # Probably dangerous wrt viewOffset otherwise.
-            episode.reload()
+        assert not episode.isFullObject()  # Probably dangerous wrt viewOffset otherwise.
         player = episode.players[0]
 
         return cls(
