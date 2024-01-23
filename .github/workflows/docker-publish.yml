@@ -7,9 +7,9 @@ name: Docker
 
 on:
   push:
-    branches: [ main ]
+    branches: [ alpine ]
   pull_request:
-    branches: [ main ]
+    branches: [ alpine ]
 
 env:
   # Use docker.io for Docker Hub if empty
