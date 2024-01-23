@@ -4,7 +4,7 @@
 
 # base
 
-FROM python:3.9.18-slim as base
+FROM python:3.9.18-alpine3.19 as base
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
